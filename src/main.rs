@@ -6,14 +6,31 @@ use plotly::{Plot, Scatter};
 use chrono::{DateTime, TimeZone, Utc};
 use tokio;
 use std::io::{self, Write};
+use clap::Parser;
+
+/// Command-line argument parser
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Stock ticker symbol (e.g., AAPL)
+    #[arg(short, long)]
+    ticker: Option<String>,
+}
 
 #[tokio::main]
 async fn main() {
-    let mut ticker = String::new();
-    print!("Enter the stock ticker (e.g., AAPL): ");
-    io::stdout().flush().unwrap();
-    io::stdin().read_line(&mut ticker).unwrap();
-    let ticker = ticker.trim().to_uppercase();
+    let args = Args::parse();
+
+    let ticker = if let Some(ticker) = args.ticker {
+        ticker.trim().to_uppercase()
+    } else {
+        // ff no ticker is provided as a command-line argument, prompt for it
+        let mut ticker = String::new();
+        print!("Enter the stock ticker (e.g., AAPL): ");
+        io::stdout().flush().unwrap();
+        io::stdin().read_line(&mut ticker).unwrap();
+        ticker.trim().to_uppercase()
+    };
 
     let provider = yahoo::YahooConnector::new().unwrap();
 
